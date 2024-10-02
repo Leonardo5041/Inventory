@@ -1,8 +1,4 @@
-import pandas as pd
-import mysql.connector
-from functions.csv_generate import generate_csv_active
-from functions.csv_generate import generate_csv_reserve
-from functions.csv_generate import generate_damage_csv
+from functions.csv_generate import generate_csv_active, generate_csv_return, generate_csv_reserve, generate_damage_csv
 from insert import insert_into_db
 
 def main():
@@ -24,13 +20,15 @@ def main():
 
 
 def generate_csv():
-    type = input("Ingrese el tipo de inventario (1. Activo, 2. Reserva, 3. RDM): ")
+    type = input("Ingrese el tipo de inventario (1. Activo, 2. Reserva, 3. RMD, 4. DEVOLUCION): ")
     if type == '1':
         generate_csv_active()
     elif type == '2':
         generate_csv_reserve()
     elif type == '3':
         generate_damage_csv()
+    elif type == '4':
+        generate_csv_return()
     else:
         print("Tipo de inventario inválido. Intente de nuevo.")
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 
 # Lee el archivo CSV
-df = pd.read_csv('INVEN.840_ORACLE_CIG.csv', sep=',')
+df = pd.read_csv('RDM_870_FINAL.csv', sep=',')
 
 def handle_empty_value(value):
     if pd.isna(value) or value == '':
@@ -15,11 +15,18 @@ def handle_empty_value(value):
 # Establece la conexión a la base de datos MySQL
 def insert_into_db():
     try:
+        # connection = mysql.connector.connect(
+        #     host="10.115.4.89",
+        #     user="diegoa",
+        #     password="Oracl3Dieg0",
+        #     database="templatesDB"
+        # )
         connection = mysql.connector.connect(
-            host="10.115.4.89",
-            user="diegoa",
-            password="Oracl3Dieg0",
-            database="templatesDB"
+            host="127.0.0.1",
+            port="33060",
+            user="root",
+            password="admin",
+            database="ORACLE"
         )
 
         if connection.is_connected():
