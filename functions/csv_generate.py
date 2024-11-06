@@ -21,7 +21,7 @@ def generate_csv_active():
     """
     SELECT
         '[H1]'                               as '[headings]',
-        'INV_INICIAL_01092024'                               as shipment_nbr,
+        CONCAT('INV_INICIAL_', DATE_FORMAT(NOW(), '%d%m%Y')) as shipment_nbr,
         ORACLE.CDT(CAST(ALMACEN AS UNSIGNED))                                     as facility_code,
         'GPOSAN'                          as company_code,
         ''                                          as trailer_nbr,
@@ -505,7 +505,7 @@ def generate_damage_csv():
         """
         SELECT
             '[H1]'                               as '[headings]',
-            'INV_INICIAL_01092024'                               as shipment_nbr,
+            CONCAT('INV_INICIAL_', DATE_FORMAT(NOW(), '%d%m%Y')) as shipment_nbr,
             ORACLE.CDT(CAST(ALMACEN AS UNSIGNED))                                     as facility_code,
             'GPOSAN'                          as company_code,
             ''                                          as trailer_nbr,
@@ -699,6 +699,7 @@ def generate_damage_csv():
     INNER JOIN ST_UBICACIONES_ALM UBI
     ON ST_INVENTARIO_FISICO.CODIGO_DE_UBICACION = UBI.barcode
     WHERE ST_INVENTARIO_FISICO.RDM != ''
+    AND UBI.type != 'E'
     ORDER BY CODIGO_LPN;
     """
     )
@@ -837,9 +838,9 @@ def generate_csv_return():
            '' AS recv_xdock_facility_code,
            '' AS cust_field_1,
            '' AS cust_field_2,
-           I1.RDM AS cust_field_3,
+           '' AS cust_field_3,
            '' AS cust_field_4,
-           '' AS cust_field_5,
+           I1.No_LOTE AS cust_field_5,
            '' AS lpn_is_physical_pallet_flg,
            '' AS po_seq_nbr,
            '' AS pre_pack_ratio_seq,
@@ -903,6 +904,13 @@ def generate_csv_return():
            '' AS marked_for_qc_flg
     FROM ST_INVENTARIO_FISICO I1
     CROSS JOIN (SELECT @n := 0) AS init
+    INNER JOIN ST_UBICACIONES_ALM AS UBI
+    ON
+        I1.ALMACEN = UBI.ID_CDI
+        AND
+        I1.CODIGO_DE_UBICACION = UBI.barcode
+    WHERE
+        UBI.type = 'E'
     ORDER BY seq_nbr ASC;
         """
     )
@@ -918,35 +926,20 @@ def generate_csv_return():
 
     lll_query = (
         """
-        SELECT DISTINCT
-        A.company_code,
-        A.facility_code,
-        MIN(A.lpn_nbr) AS lpn_nbr,
-        '' as receipt_ts,
-        A.location_barcode,
-        '' as lock_code,
-        '' as pallet_nbr,
-        '' as pallet_position
-    FROM (
-        SELECT
-            'GPOSAN' AS company_code,
-            ORACLE.CDT(CAST(INV.ALMACEN AS UNSIGNED)) AS facility_code,
-            INV.CODIGO_LPN AS lpn_nbr,
-            INV.CODIGO_DE_UBICACION AS location_barcode
-        FROM
-            ST_INVENTARIO_FISICO AS INV
-        INNER JOIN
-            ST_UBICACIONES_ALM AS UBI
-        ON
-            INV.CODIGO_DE_UBICACION = UBI.barcode
-            AND INV.ALMACEN = UBI.ID_CDI
-        WHERE
-            UBI.type = 'A' -- CAMBIAR POR 'R' PARA RESERVA
-    ) AS A
-    GROUP BY
-        A.company_code,
-        A.facility_code,
-        A.location_barcode;
+        SELECT DISTINCT 
+    'GPOSAN' as 'company_code',
+    ORACLE.CDT(CAST(ALMACEN AS UNSIGNED)) as 'facility_code',
+    CODIGO_LPN as 'lpn_nbr',
+    '' as receipt_ts,
+    ST_INVENTARIO_FISICO.CODIGO_DE_UBICACION as 'location_barcode',
+    '' as lock_code,
+    '' as pallet_nbr,
+    '' as pallet_position
+    FROM ST_INVENTARIO_FISICO
+    INNER JOIN ST_UBICACIONES_ALM UBI
+    ON ST_INVENTARIO_FISICO.CODIGO_DE_UBICACION = UBI.barcode
+    WHERE UBI.type = 'E'
+    ORDER BY CODIGO_LPN
         """
     )
 
